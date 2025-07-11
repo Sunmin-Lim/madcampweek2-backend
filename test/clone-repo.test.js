@@ -2,6 +2,10 @@ const request = require('supertest');
 const { app, server } = require('../server');
 const User = require('../models/User');
 const generateToken = require('./test-utils');
+const fs = require('fs-extra');
+const path = require('path');
+
+const BASE_CLONE_PATH = path.resolve('F:/workspace/server_manage/home/testuser');
 
 describe('POST /clone-repo', () => {
   let token;
@@ -16,8 +20,17 @@ describe('POST /clone-repo', () => {
     token = generateToken(user._id);
   });
 
+  beforeEach(() => {
+    if (fs.existsSync(BASE_CLONE_PATH)) {
+      fs.removeSync(BASE_CLONE_PATH);
+    }
+  });
+
   afterAll(async () => {
     await User.deleteMany({});
+    if (fs.existsSync(BASE_CLONE_PATH)) {
+      fs.removeSync(BASE_CLONE_PATH);
+    }
     if (server && server.close) {
       await new Promise(resolve => server.close(resolve));
     }
