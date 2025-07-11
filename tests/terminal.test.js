@@ -6,7 +6,7 @@ const Session = require('../app/models/session.model'); // Adjust path if needed
 describe('API /api/terminal', () => {
   let testContainerId;
 
-  const TEST_USER_ID = 'testuser';
+  const TEST_USER_ID = 'testuser-terminal';
   const TEST_IMAGE_NAME = 'testuser-image';
   const TEST_LOCAL_PATH = '/Users/imsnmn/madcampweek2-backend/cloned-repo'; // Verify this path
 
