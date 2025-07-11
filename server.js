@@ -34,3 +34,6 @@ mongoose.connect('mongodb://127.0.0.1:27017/mydatabase')
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
+
+// ⭐️ [9] Express 앱 객체를 내보내기 (수정된 부분)
+module.exports = app; // supertest에서 이 앱 객체를 가져올 수 있게 내보내기
