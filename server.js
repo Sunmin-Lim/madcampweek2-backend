@@ -1,10 +1,10 @@
 // server.js
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const authRouter = require('./routes/auth');
-
+const authRouter = require('./app/api/auth/auth.routes');
 
 dotenv.config();
 
@@ -25,6 +25,7 @@ const sessionRoutes = require('./app/api/session/session.routes');
 const terminalRoutes = require('./app/api/terminal/terminal.routes');
 const sessionAdminRoutes = require('./app/api/session/session.admin.routes');
 const gitCloneRoutes = require('./routes/gitController');  // git_clone 기능 라우터 경로
+const githubAuthRouter = require('./app/api/auth/github.routes');
 
 // 라우터 등록
 app.use('/api/auth', authRouter);
@@ -32,6 +33,7 @@ app.use('/api/session', sessionRoutes);
 app.use('/api/terminal', terminalRoutes);
 app.use('/api/session/admin', sessionAdminRoutes);
 app.use('/api/gitController', gitCloneRoutes);  // git_clone 기능 경로
+app.use('/api/auth', githubAuthRouter);
 
 // 기본 루트 라우트
 app.get('/', (req, res) => {
