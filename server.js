@@ -3,6 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const authRouter = require('./routes/auth');
+
 
 dotenv.config();
 
@@ -25,6 +27,7 @@ const sessionAdminRoutes = require('./app/api/session/session.admin.routes');
 const gitCloneRoutes = require('./routes/gitController');  // git_clone 기능 라우터 경로
 
 // 라우터 등록
+app.use('/api/auth', authRouter);
 app.use('/api/session', sessionRoutes);
 app.use('/api/terminal', terminalRoutes);
 app.use('/api/session/admin', sessionAdminRoutes);
