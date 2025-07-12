@@ -11,6 +11,7 @@ const sessionAdminRoutes = require('./app/api/session/session.admin.routes');
 const gitCloneRoutes = require('./routes/gitController');
 const githubAuthRouter = require('./app/api/auth/github.routes');
 const archiveRoutes = require('./app/api/archive/archive.routes');
+const domainRoutes = require('./app/api/domain/domain.routes'); // Ensure correct import
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +33,7 @@ app.use('/api/session/admin', sessionAdminRoutes);
 app.use('/api/gitController', gitCloneRoutes);
 app.use('/api/auth', githubAuthRouter);
 app.use('/api/archive', archiveRoutes);
+app.use('/api/domain', domainRoutes);    // Routes for domain (container running)
 
 app.get('/', (req, res) => {
   res.send('Hello from the Node.js Backend!');
