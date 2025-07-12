@@ -20,7 +20,7 @@ Response:
 ---
 
 ## 2. 세션 목록 조회
-GET /api/session?user_id=<user_id>
+GET /api/session/get?user_id=<user_id>
 
 Response:
 [
