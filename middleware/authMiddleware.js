@@ -10,7 +10,16 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ message: '토큰이 필요합니다.' });
   }
 
-  jwt.verify(token, 'your_secret_key', (err, user) => {
+  // jwt.verify(token, 'your_secret_key', (err, user) => {
+  //   if (err) {
+  //     console.log('유효하지 않은 토큰', err);  // 토큰 검증 오류 로그
+  //     return res.status(403).json({ message: '유효하지 않은 토큰입니다.' });
+  //   }
+  //   req.user = user;  // 사용자 정보를 요청 객체에 추가
+  //   next();
+  // });
+
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
     if (err) {
       console.log('유효하지 않은 토큰', err);  // 토큰 검증 오류 로그
       return res.status(403).json({ message: '유효하지 않은 토큰입니다.' });

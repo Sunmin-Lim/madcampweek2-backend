@@ -9,7 +9,9 @@ describe('API /api/session', () => {
 
   const TEST_USER_ID = 'testuser-session';
   const TEST_IMAGE_NAME = 'testuser-image';
-  const TEST_LOCAL_PATH = '/Users/imsnmn/madcampweek2-backend/cloned-repo';
+ // const TEST_LOCAL_PATH = '/Users/imsnmn/madcampweek2-backend/cloned-repo';
+ const TEST_LOCAL_PATH = '/home/hanjeongjin/Workspace_ubuntu/backend/madcampweek2-backend/cloned-repo';
+
 
   beforeAll(async () => {
     console.log('✅ [beforeAll] Cleaning ALL sessions...');
