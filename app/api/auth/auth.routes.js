@@ -3,7 +3,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const User = require('../../../models/User');
-const authenticateToken = require('../../../middleware/authMiddleware'); // 미들웨어 임포트
+const authenticateToken = require('../../middleware/authMiddleware');
+
+//const authenticateToken = require('../../../middleware/authMiddleware'); // 미들웨어 임포트
 
 
 

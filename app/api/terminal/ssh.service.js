@@ -4,10 +4,18 @@ async function addSSHKey(containerId, privateKey) {
   // Use a "Here Document" for robust multi-line string passing
   // This prevents shell parsing issues with newlines and special characters within the key.
   // The 'EOF_KEY' delimiter is arbitrary, but should not appear in the privateKey itself.
-  const command = `cat <<'EOF_KEY' > /root/.ssh/id_rsa
+//  const command = `cat <<'EOF_KEY' > /root/.ssh/id_rsa
+//${privateKey}
+//EOF_KEY
+//chmod 600 /root/.ssh/id_rsa`;
+
+
+const command = `mkdir -p /root/.ssh && \
+cat <<'EOF_KEY' > /root/.ssh/id_rsa
 ${privateKey}
 EOF_KEY
 chmod 600 /root/.ssh/id_rsa`;
+
 
   return new Promise((resolve, reject) => {
     // The outer command for docker exec needs to correctly embed the shell command.
