@@ -22,17 +22,62 @@ function buildImage(localPath, imageName) {
   });
 }
 
+// /**
+//  * Runs a Docker container from a given image.
+//  */
+// function runContainer(imageName, resources = {}) {
+//   return new Promise((resolve, reject) => {
+//     let cmd = `docker run -d`;
+//     if (resources.cpu) cmd += ` --cpus=${resources.cpu}`;
+//     if (resources.memory) cmd += ` --memory=${resources.memory}`;
+//     cmd += ` ${imageName}`;
+
+//     console.log(`🚀 Running container: ${cmd}`);
+//     exec(cmd, (error, stdout, stderr) => {
+//       if (error) {
+//         console.error(`🔴 Docker Run Error:`, error.message);
+//         console.error(`🔴 Run Stderr:`, stderr);
+//         return reject(new Error(stderr || error.message));
+//       }
+//       if (stderr) {
+//         console.warn(`🟡 Docker Run Warning/Stderr:`, stderr);
+//       }
+//       const containerId = stdout.trim();
+//       console.log(`✅ Container ID: ${containerId}`);
+//       resolve(containerId);
+//     });
+//   });
+// }
+
+
+
 /**
- * Runs a Docker container from a given image.
+ * Runs a Docker container from a given image with specified resources and port mappings.
  */
 function runContainer(imageName, resources = {}) {
   return new Promise((resolve, reject) => {
     let cmd = `docker run -d`;
-    if (resources.cpu) cmd += ` --cpus=${resources.cpu}`;
-    if (resources.memory) cmd += ` --memory=${resources.memory}`;
+
+    // CPU 설정
+    if (resources.cpu) {
+      cmd += ` --cpus=${resources.cpu}`;
+    }
+
+    // 메모리 설정
+    if (resources.memory) {
+      cmd += ` --memory=${resources.memory}`;
+    }
+
+    // 포트 매핑 설정
+    if (resources.port) {
+      cmd += ` -p ${resources.port}`;
+    }
+
+    // 이미지 이름 추가
     cmd += ` ${imageName}`;
 
     console.log(`🚀 Running container: ${cmd}`);
+    
     exec(cmd, (error, stdout, stderr) => {
       if (error) {
         console.error(`🔴 Docker Run Error:`, error.message);
@@ -42,6 +87,7 @@ function runContainer(imageName, resources = {}) {
       if (stderr) {
         console.warn(`🟡 Docker Run Warning/Stderr:`, stderr);
       }
+
       const containerId = stdout.trim();
       console.log(`✅ Container ID: ${containerId}`);
       resolve(containerId);

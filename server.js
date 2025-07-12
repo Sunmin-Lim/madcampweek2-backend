@@ -26,6 +26,8 @@ const terminalRoutes = require('./app/api/terminal/terminal.routes');
 const sessionAdminRoutes = require('./app/api/session/session.admin.routes');
 const gitCloneRoutes = require('./routes/gitController');  // git_clone 기능 라우터 경로
 const githubAuthRouter = require('./app/api/auth/github.routes');
+const domainRoutes = require('./app/api/domain/domain.routes'); // Ensure correct import
+
 
 // 라우터 등록
 app.use('/api/auth', authRouter);
@@ -34,6 +36,8 @@ app.use('/api/terminal', terminalRoutes);
 app.use('/api/session/admin', sessionAdminRoutes);
 app.use('/api/gitController', gitCloneRoutes);  // git_clone 기능 경로
 app.use('/api/auth', githubAuthRouter);
+app.use('/api/domain', domainRoutes);    // Routes for domain (container running)
+
 
 // 기본 루트 라우트
 app.get('/', (req, res) => {
