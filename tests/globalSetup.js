@@ -11,10 +11,15 @@ module.exports = async () => {
   console.log('\n✨ [Global Setup] Connecting to MongoDB...');
   try {
     // Connect to MongoDB, using a fallback URI if process.env.MONGO_URI is undefined
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mydatabase_test', { // Added fallback
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    // await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mydatabase_test', { // Added fallback
+    //   useNewUrlParser: true,
+    //   useUnifiedTopology: true,
+    // });
+
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/mydatabase');
+
+
+
     console.log('✅ [Global Setup] MongoDB connected successfully.');
 
     // Clean all existing sessions from the database before any tests run.

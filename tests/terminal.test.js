@@ -8,7 +8,9 @@ describe('API /api/terminal', () => {
 
   const TEST_USER_ID = 'testuser-terminal';
   const TEST_IMAGE_NAME = 'testuser-image';
-  const TEST_LOCAL_PATH = '/Users/imsnmn/madcampweek2-backend/cloned-repo'; // Verify this path
+ // const TEST_LOCAL_PATH = '/Users/imsnmn/madcampweek2-backend/cloned-repo';
+ const TEST_LOCAL_PATH = '/home/hanjeongjin/Workspace_ubuntu/backend/madcampweek2-backend/cloned-repo';
+
 
   // No need for jest.setTimeout here if set globally.
 
