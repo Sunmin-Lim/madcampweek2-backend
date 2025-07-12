@@ -146,7 +146,9 @@ const User = require('../models/User'); // User 모델 임포트
 const router = express.Router();
 
 // 인증 미들웨어를 사용하여 사용자 인증을 추가
-const authenticateToken = require('../middleware/authMiddleware'); 
+const authenticateToken = require('../app/middleware/authMiddleware');
+
+//const authenticateToken = require('../middleware/authMiddleware'); 
 
 router.post('/clone-repo', authenticateToken, async (req, res) => {
   const { repoUrl } = req.body;  // 클라이언트에서 보낸 리포지토리 URL 받기
