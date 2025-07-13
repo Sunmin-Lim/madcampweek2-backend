@@ -71,7 +71,35 @@ async function gitclone(req, res) {
   }
 }
 
+
+// 클론된 리포지토리 목록 반환 함수
+async function getClonedRepos(req, res) {
+    const { userId } = req.params;  // URL 파라미터에서 userId 받기
+    console.log(`Fetching cloned repos for userId: ${userId}`);  // userId 출력
+  
+
+    try {
+      // 해당 userId로 사용자 정보 조회
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        console.log('User not found!');
+        return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+      }
+  
+      console.log('Cloned repos:', user.clonedRepos);  // 클론된 리포지토리 배열 출력
+
+      // 사용자의 클론된 리포지토리 목록 반환
+      return res.status(200).json({
+        message: '사용자의 클론된 리포지토리 목록',
+        clonedRepos: user.clonedRepos,  // 사용자 클론된 리포지토리 배열
+      });
+    } catch (error) {
+      console.error('Error fetching cloned repos:', error.message);
+      return res.status(500).json({ message: '클론된 리포지토리 조회 중 오류 발생', error: error.message });
+    }
+  }
 // module.exports = gitclone;
 
 // gitclone 함수 내보내기
-module.exports = { gitclone };
+module.exports = { gitclone, getClonedRepos };
