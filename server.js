@@ -8,7 +8,10 @@ const authRouter = require('./app/api/auth/auth.routes');
 const sessionRoutes = require('./app/api/session/session.routes');
 const terminalRoutes = require('./app/api/terminal/terminal.routes');
 const sessionAdminRoutes = require('./app/api/session/session.admin.routes');
-const gitCloneRoutes = require('./routes/gitController');
+// const gitCloneRoutes = require('./routes/gitController');
+const gitCloneRoutes = require('./app/api/gitclone/gitclone.routes');
+
+
 const githubAuthRouter = require('./app/api/auth/github.routes');
 const archiveRoutes = require('./app/api/archive/archive.routes');
 const domainRoutes = require('./app/api/domain/domain.routes'); // Ensure correct import
