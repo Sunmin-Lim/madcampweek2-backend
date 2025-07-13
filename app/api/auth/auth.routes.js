@@ -1,5 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const axios = require('axios');
+
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const User = require('../../../models/User');
@@ -85,27 +87,143 @@ router.post('/login', async (req, res) => {
  */
 
 // Step 1: Redirect to GitHub
+// router.get('/github',
+//   passport.authenticate('github', { scope: ['user:email'] })
+// );
+
+// // Step 2: GitHub redirects back here
+// router.get('/github/callback',
+//   passport.authenticate('github', { failureRedirect: '/login', session: false }),
+//   (req, res) => {
+//     const user = req.user;
+//     const token = jwt.sign({ userId: user._id }, SECRET_KEY, { expiresIn: '1h' });
+
+//     console.log('✅ GitHub 로그인 완료:', user);
+//     console.log('✅ JWT 발급:', token);
+
+//     // ✅ Frontend integration
+//     // You can redirect or send JSON
+//     // Example: Redirect with token as query
+//     // const FRONTEND_URL = process.env.FRONTEND_URL || 'http://143.248.183.61:5173';
+//     const FRONTEND_URL = process.env.FRONTEND_URL;
+
+//     return res.redirect(`${FRONTEND_URL}/login-success?token=${token}`);
+//   }
+// );
+
+// Step 1: Redirect to GitHub
 router.get('/github',
   passport.authenticate('github', { scope: ['user:email'] })
 );
 
-// Step 2: GitHub redirects back here
-router.get('/github/callback',
-  passport.authenticate('github', { failureRedirect: '/login', session: false }),
-  (req, res) => {
-    const user = req.user;
-    const token = jwt.sign({ userId: user._id }, SECRET_KEY, { expiresIn: '1h' });
+// router.get('/github/callback', (req, res) => {
+//   const code = req.query.code;
 
-    console.log('✅ GitHub 로그인 완료:', user);
-    console.log('✅ JWT 발급:', token);
+//   console.log('📥 [GitHub Callback] 호출됨');
+//   console.log('🔑 받은 code:', code);
 
-    // ✅ Frontend integration
-    // You can redirect or send JSON
-    // Example: Redirect with token as query
-    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-    return res.redirect(`${FRONTEND_URL}/login-success?token=${token}`);
+//   if (!code) {
+//     console.warn('⚠️ code가 없음 - 클라이언트 잘못된 접근');
+//     return res.status(400).send('GitHub code not found');
+//   }
+
+//   // 앱으로 redirect
+//   const appRedirect = `myapp://callback?code=${code}`;
+//   console.log('📤 앱으로 리디렉트:', appRedirect);
+
+//   return res.redirect(appRedirect);
+// });
+
+
+
+router.get('/github/callback', (req, res) => {
+  const code = req.query.code;
+
+  if (!code) {
+    return res.status(400).send('GitHub code not found');
   }
-);
+
+  const appRedirect = `myapp://callback?code=${code}`;
+
+  res.send(`
+    <html>
+      <head>
+        <title>앱으로 이동 중...</title>
+        <script>
+          // 2초 기다렸다가 앱 열기
+          setTimeout(function() {
+            window.location = '${appRedirect}';
+          }, 2000); // 2000ms = 2초
+
+          // 5초 후에도 앱이 안 열리면 안내 메시지 보여주기
+          setTimeout(function() {
+            document.body.innerHTML = '<h3>앱이 자동으로 열리지 않으면 직접 실행해 주세요.</h3>';
+          }, 5000);
+        </script>
+      </head>
+      <body>
+        <h3>GitHub 로그인 완료! 앱으로 돌아가는 중입니다...</h3>
+      </body>
+    </html>
+  `);
+});
+
+
+// 👉 Flutter에서 POST로 code 전달
+router.post('/github/code', async (req, res) => {
+  const { code } = req.body;
+
+  try {
+    // 1. GitHub에 access_token 요청
+    const tokenRes = await axios.post(
+      'https://github.com/login/oauth/access_token',
+      {
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        code,
+      },
+      { headers: { accept: 'application/json' } }
+    );
+
+    const accessToken = tokenRes.data.access_token;
+    if (!accessToken) {
+      return res.status(400).json({ message: 'GitHub access token 요청 실패' });
+    }
+
+    // 2. GitHub 사용자 정보 요청
+    const userRes = await axios.get('https://api.github.com/user', {
+      headers: { Authorization: `token ${accessToken}` },
+    });
+
+    const profile = userRes.data;
+
+    // 3. 사용자 DB 등록 or 조회
+    let user = await User.findOne({ githubId: profile.id });
+    if (!user) {
+      user = await User.create({
+        email: profile.email || `${profile.login}@github.com`, // email이 null일 수 있음
+        username: profile.login,
+        githubId: profile.id,
+        authType: 'github',
+      });
+    }
+
+    // 4. JWT 발급
+    const token = jwt.sign({ userId: user._id }, SECRET_KEY, {
+      expiresIn: '1h',
+    });
+
+    // 5. Flutter로 응답
+    return res.status(200).json({ token });
+
+  } catch (error) {
+    console.error('GitHub OAuth 실패:', error);
+    return res.status(500).json({ message: 'GitHub OAuth 처리 중 오류' });
+  }
+});
+
+
+
 
 // ================================================
 // ✅ 현재 로그인한 사용자의 정보 가져오기

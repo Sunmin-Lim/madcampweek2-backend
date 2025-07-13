@@ -61,7 +61,8 @@ passport.use(new GitHubStrategy(
   {
     clientID: GITHUB_CLIENT_ID,
     clientSecret: GITHUB_CLIENT_SECRET,
-    callbackURL: process.env.GITHUB_CALLBACK_URL || 'http://localhost:3000/api/auth/github/callback',
+    // callbackURL: process.env.GITHUB_CALLBACK_URL || 'http://143.248.183.61:3000/api/auth/github/callback',
+    callbackURL: process.env.GITHUB_CALLBACK_URL,
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
@@ -81,6 +82,7 @@ passport.use(new GitHubStrategy(
           username: profile.username,
           githubId: profile.id,
           clonedRepos: [],
+          authType: 'github', // ✅ 이 줄이 필수!
         });
         await user.save();
         console.log('✅ 새 사용자 생성:', user);
