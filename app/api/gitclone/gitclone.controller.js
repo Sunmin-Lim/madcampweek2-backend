@@ -4,6 +4,15 @@ const path = require('path');
 const { exec } = require('child_process');
 const User = require('../../../models/User'); // User 모델 임포트
 
+
+/*
+추가할 api
+기존 repository 제거 -> session 제거
+기존 repository 반환 ??
+*/
+
+
+
 async function gitclone(req, res) {
   const { repoUrl } = req.body;  // 클라이언트에서 보낸 리포지토리 URL 받기
   const { userId } = req.user;   // JWT 토큰에서 사용자 ID 받기 (middleware에서 추가)
