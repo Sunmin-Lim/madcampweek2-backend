@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
       return this.authType === 'local'; // local 사용자만 필요
     },
   },
-  githubId: { type: String, unique: true }, // GitHub에서 온 사용자 구분
+  githubId: { type: String, unique: true, sparse: true }, // GitHub에서 온 사용자 구분
   authType: { type: String, enum: ['local', 'github'], default: 'local' },
 });
 
