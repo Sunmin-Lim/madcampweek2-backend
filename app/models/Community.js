@@ -7,8 +7,10 @@ const AnswerSchema = new mongoose.Schema({
 const CommunityPostSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: String,
+  tags: [String],
+  views: { type: Number, default: 0 },
   answers: [AnswerSchema],
-});
+}, { timestamps: true });
 
 const UsefulLinkSchema = new mongoose.Schema({
   name: String,

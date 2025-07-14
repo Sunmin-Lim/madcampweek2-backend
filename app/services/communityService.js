@@ -1,11 +1,12 @@
 const { CommunityPost, UsefulLink } = require('../models/Community');
 
+// 🔹 POSTS
 async function getAllPosts() {
   return await CommunityPost.find();
 }
 
-async function createPost({ title, content }) {
-  return await CommunityPost.create({ title, content });
+async function createPost({ title, content, tags }) {
+  return await CommunityPost.create({ title, content, tags });
 }
 
 async function addAnswer(postId, text) {
@@ -16,6 +17,23 @@ async function addAnswer(postId, text) {
   return post;
 }
 
+async function findPostsByTag(tag) {
+  return await CommunityPost.find({ tags: tag });
+}
+
+async function getTopPosts(limit = 3) {
+  return await CommunityPost.find().sort({ views: -1 }).limit(limit);
+}
+
+async function incrementPostView(postId) {
+  return await CommunityPost.findByIdAndUpdate(
+    postId,
+    { $inc: { views: 1 } },
+    { new: true }
+  );
+}
+
+// 🔹 LINKS
 async function getAllLinks() {
   return await UsefulLink.find();
 }
@@ -28,6 +46,9 @@ module.exports = {
   getAllPosts,
   createPost,
   addAnswer,
+  findPostsByTag,
+  getTopPosts,
+  incrementPostView,
   getAllLinks,
   addLink
 };
