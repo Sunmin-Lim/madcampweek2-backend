@@ -11,7 +11,7 @@ const authenticateToken = require('../../middleware/authMiddleware');
 
 
 
-require('./githubStrategy'); // <-- Loads the passport GitHub strategy
+// require('./githubStrategy'); // <-- Loads the passport GitHub strategy
 
 
 require('dotenv').config();  // .env 파일 로드

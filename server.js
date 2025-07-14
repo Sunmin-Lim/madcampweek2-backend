@@ -13,8 +13,14 @@ const gitCloneRoutes = require('./app/api/gitclone/gitclone.routes');
 
 
 // const githubAuthRouter = require('./app/api/auth/github.routes');
-const archiveRoutes = require('./app/api/archive/archive.routes');
+// const archiveRoutes = require('./app/api/archive/archive.routes');
+
+const sudo_archiveRoutes = require('./app/api/sudo_archive/sudo_archive.routes');
+
+
 const domainRoutes = require('./app/api/domain/domain.routes'); // Ensure correct import
+
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,7 +41,9 @@ app.use('/api/terminal', terminalRoutes);
 app.use('/api/session/admin', sessionAdminRoutes);
 app.use('/api/gitController', gitCloneRoutes);
 // app.use('/api/auth', githubAuthRouter);
-app.use('/api/archive', archiveRoutes);
+// app.use('/api/archive', archiveRoutes);
+
+app.use('/api/sudo_archive', sudo_archiveRoutes); // Sudo archive routes
 app.use('/api/domain', domainRoutes);    // Routes for domain (container running)
 
 app.get('/', (req, res) => {
