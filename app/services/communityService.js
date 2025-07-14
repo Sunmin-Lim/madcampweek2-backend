@@ -1,31 +1,27 @@
-const CommunityPost = require('../models/CommunityPost');
-const UsefulLink = require('../models/UsefulLink');
+const { CommunityPost, UsefulLink } = require('../models/Community');
 
-// Posts
 async function getAllPosts() {
   return await CommunityPost.find();
 }
 
 async function createPost({ title, content }) {
-  const post = new CommunityPost({ title, content });
-  return await post.save();
+  return await CommunityPost.create({ title, content });
 }
 
 async function addAnswer(postId, text) {
   const post = await CommunityPost.findById(postId);
   if (!post) throw new Error('Post not found');
   post.answers.push({ text });
-  return await post.save();
+  await post.save();
+  return post;
 }
 
-// Links
 async function getAllLinks() {
   return await UsefulLink.find();
 }
 
 async function addLink({ name, url }) {
-  const link = new UsefulLink({ name, url });
-  return await link.save();
+  return await UsefulLink.create({ name, url });
 }
 
 module.exports = {
@@ -33,5 +29,5 @@ module.exports = {
   createPost,
   addAnswer,
   getAllLinks,
-  addLink,
+  addLink
 };

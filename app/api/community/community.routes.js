@@ -2,9 +2,7 @@ const express = require('express');
 const router = express.Router();
 const communityService = require('../../services/communityService');
 
-// --- Posts ---
-
-// Get all posts
+// Posts
 router.get('/posts', async (req, res) => {
   try {
     const posts = await communityService.getAllPosts();
@@ -14,7 +12,6 @@ router.get('/posts', async (req, res) => {
   }
 });
 
-// Create new post
 router.post('/posts', async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -25,7 +22,6 @@ router.post('/posts', async (req, res) => {
   }
 });
 
-// Add answer to post
 router.post('/posts/:id/answers', async (req, res) => {
   try {
     const { text } = req.body;
@@ -36,9 +32,7 @@ router.post('/posts/:id/answers', async (req, res) => {
   }
 });
 
-// --- Links ---
-
-// Get all links
+// Links
 router.get('/links', async (req, res) => {
   try {
     const links = await communityService.getAllLinks();
@@ -48,7 +42,6 @@ router.get('/links', async (req, res) => {
   }
 });
 
-// Add new link
 router.post('/links', async (req, res) => {
   try {
     const { name, url } = req.body;
