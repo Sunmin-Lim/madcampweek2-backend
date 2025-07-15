@@ -89,4 +89,19 @@ router.post('/links', async (req, res) => {
   }
 });
 
+// ✅ NEW: Crawl Google and save
+router.post('/crawl/google', async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) {
+      return res.status(400).json({ error: 'query is required.' });
+    }
+
+    await communityService.crawlGoogleAndSave(query);
+    res.json({ message: '✅ 구글 크롤링 및 저장 완료!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

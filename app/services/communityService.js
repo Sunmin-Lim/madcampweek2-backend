@@ -1,4 +1,5 @@
 const { CommunityPost, UsefulLink } = require('../models/Community');
+const { googleSearchAndSave } = require('./googleCrawler');
 
 // 🔹 POSTS
 async function getAllPosts() {
@@ -42,6 +43,11 @@ async function addLink({ name, url }) {
   return await UsefulLink.create({ name, url });
 }
 
+// 🔹 GOOGLE CRAWLER
+async function crawlGoogleAndSave(query) {
+  await googleSearchAndSave(query);
+}
+
 module.exports = {
   getAllPosts,
   createPost,
@@ -50,5 +56,6 @@ module.exports = {
   getTopPosts,
   incrementPostView,
   getAllLinks,
-  addLink
+  addLink,
+  crawlGoogleAndSave
 };
