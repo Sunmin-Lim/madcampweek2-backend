@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 const User = require('../../../models/User'); // User 모델 임포트
+const ClonedRepo = require('../../../models/ClonedRepo');
 
 
 /*
@@ -57,16 +58,35 @@ async function gitclone(req, res) {
 
       // 클론이 성공하면, 해당 리포지토리 정보를 사용자 DB에 저장
       try {
-        user.clonedRepos.push(repoUrl);  // 클론된 리포지토리 URL을 배열에 추가
-        await user.save(); // DB에 저장
-
-        console.log('Git 클론 출력:', stdout);  // Git 클론 성공 후 출력
-        console.log('📌 클론된 리포지토리 목록:', user.clonedRepos);  // 클론된 리포지토리 목록 로그
-
+        user.clonedRepos.push(repoUrl);  // URL 추가
+      
+        // 1. ClonedRepo 객체 생성
+        const newClonedRepo = new ClonedRepo({
+          user_id: user._id,              // 사용자 ID
+          repo_id: `${user.username}_${repoName}`,  // repo_id는 유니크해야 함
+          repo_url: repoUrl,
+          can_push: false,             // 기본값
+          session_id: null,            // 세션은 아직 없음
+          runed_at: undefined          // 실행 전이므로 생략 가능
+        });
+      
+        // 2. 저장
+        const savedClonedRepo = await newClonedRepo.save();
+      
+        // 3. 사용자에 연결
+        user.clonedRepoIds.push(savedClonedRepo._id);
+      
+        // 4. 최종 저장
+        await user.save();
+      
+        console.log('Git 클론 출력:', stdout);
+        console.log('📌 클론된 리포지토리 목록:', user.clonedRepos);
+      
         return res.status(200).json({
           message: 'Git 리포지토리 클론 성공',
           output: stdout,
-          clonedRepos: user.clonedRepos,  // 업데이트된 클론된 리포지토리 목록 반환
+          clonedRepos: user.clonedRepos,
+          clonedRepoIds: user.clonedRepoIds
         });
       } catch (dbError) {
         console.error('DB 저장 오류:', dbError.message);

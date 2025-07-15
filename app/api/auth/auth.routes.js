@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
     if (existingUser) return res.status(400).json({ message: 'Email already in use' });
 
     const password_hash = await bcrypt.hash(password, 10);
-    const newUser = new User({ email, password_hash, username });
+    const newUser = new User({ email, password_hash, username, logout: true }); // 로그아웃 상태 기본값 true로 설정
     await newUser.save();
 
     console.log('✅ 새 사용자 생성 완료:', newUser);
@@ -72,10 +72,48 @@ router.post('/login', async (req, res) => {
 
     console.log('✅ JWT 토큰 발급 완료:', token);
 
+    user.logout = false; // 로그인 상태로 변경
+    await user.save(); // 사용자 정보 업데이트
+
     res.status(200).json({ message: 'Login successful', token });
   } catch (error) {
     console.error('❌ [LOGIN] 에러:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+/**
+ * ================================================
+ * ✅ Email/Password 로그아웃
+ * ================================================
+ */
+// 로그아웃 라우터
+router.post('/logout', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Unauthorized: No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, SECRET_KEY);
+    const userId = decoded.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log(`👋 [LOGOUT] ${user.username} (${user.email}) 로그아웃 처리 실패`);
+      return res.status(404).json({ message: 'User not found' });
+    }
+    user.logout = true;
+    await user.save();
+
+    console.log(`👋 [LOGOUT] ${user.username} (${user.email}) 로그아웃 처리 완료`);
+
+    res.status(200).json({ message: 'Logout successful' });
+  } catch (error) {
+    console.error('❌ 로그아웃 에러:', error);
+    res.status(500).json({ message: 'Server error during logout' });
   }
 });
 
@@ -87,86 +125,42 @@ router.post('/login', async (req, res) => {
  */
 
 // Step 1: Redirect to GitHub
-// router.get('/github',
-//   passport.authenticate('github', { scope: ['user:email'] })
-// );
-
-// // Step 2: GitHub redirects back here
-// router.get('/github/callback',
-//   passport.authenticate('github', { failureRedirect: '/login', session: false }),
-//   (req, res) => {
-//     const user = req.user;
-//     const token = jwt.sign({ userId: user._id }, SECRET_KEY, { expiresIn: '1h' });
-
-//     console.log('✅ GitHub 로그인 완료:', user);
-//     console.log('✅ JWT 발급:', token);
-
-//     // ✅ Frontend integration
-//     // You can redirect or send JSON
-//     // Example: Redirect with token as query
-//     // const FRONTEND_URL = process.env.FRONTEND_URL || 'http://143.248.183.61:5173';
-//     const FRONTEND_URL = process.env.FRONTEND_URL;
-
-//     return res.redirect(`${FRONTEND_URL}/login-success?token=${token}`);
-//   }
-// );
-
-// Step 1: Redirect to GitHub
 router.get('/github',
   passport.authenticate('github', { scope: ['user:email'] })
 );
 
+
 // router.get('/github/callback', (req, res) => {
 //   const code = req.query.code;
 
-//   console.log('📥 [GitHub Callback] 호출됨');
-//   console.log('🔑 받은 code:', code);
-
 //   if (!code) {
-//     console.warn('⚠️ code가 없음 - 클라이언트 잘못된 접근');
 //     return res.status(400).send('GitHub code not found');
 //   }
 
-//   // 앱으로 redirect
 //   const appRedirect = `myapp://callback?code=${code}`;
-//   console.log('📤 앱으로 리디렉트:', appRedirect);
 
-//   return res.redirect(appRedirect);
+//   res.send(`
+//     <html>
+//       <head>
+//         <title>앱으로 이동 중...</title>
+//         <script>
+//           // 2초 기다렸다가 앱 열기
+//           setTimeout(function() {
+//             window.location = '${appRedirect}';
+//           }, 2000); // 2000ms = 2초
+
+//           // 5초 후에도 앱이 안 열리면 안내 메시지 보여주기
+//           setTimeout(function() {
+//             document.body.innerHTML = '<h3>앱이 자동으로 열리지 않으면 직접 실행해 주세요.</h3>';
+//           }, 5000);
+//         </script>
+//       </head>
+//       <body>
+//         <h3>GitHub 로그인 완료! 앱으로 돌아가는 중입니다...</h3>
+//       </body>
+//     </html>
+//   `);
 // });
-
-
-
-router.get('/github/callback', (req, res) => {
-  const code = req.query.code;
-
-  if (!code) {
-    return res.status(400).send('GitHub code not found');
-  }
-
-  const appRedirect = `myapp://callback?code=${code}`;
-
-  res.send(`
-    <html>
-      <head>
-        <title>앱으로 이동 중...</title>
-        <script>
-          // 2초 기다렸다가 앱 열기
-          setTimeout(function() {
-            window.location = '${appRedirect}';
-          }, 2000); // 2000ms = 2초
-
-          // 5초 후에도 앱이 안 열리면 안내 메시지 보여주기
-          setTimeout(function() {
-            document.body.innerHTML = '<h3>앱이 자동으로 열리지 않으면 직접 실행해 주세요.</h3>';
-          }, 5000);
-        </script>
-      </head>
-      <body>
-        <h3>GitHub 로그인 완료! 앱으로 돌아가는 중입니다...</h3>
-      </body>
-    </html>
-  `);
-});
 
 
 // 👉 Flutter에서 POST로 code 전달
@@ -203,6 +197,7 @@ router.post('/github/code', async (req, res) => {
       user = await User.create({
         email: profile.email || `${profile.login}@github.com`, // email이 null일 수 있음
         username: profile.login,
+        logout: true, // 로그아웃 상태 기본값 true로 설정
         githubId: profile.id,
         authType: 'github',
       });
@@ -212,6 +207,9 @@ router.post('/github/code', async (req, res) => {
     const token = jwt.sign({ userId: user._id }, SECRET_KEY, {
       expiresIn: '1h',
     });
+
+    user.logout = false; // 로그인 상태로 변경
+    await user.save(); // 사용자 정보 업데이트
 
     // 5. Flutter로 응답
     return res.status(200).json({ token });

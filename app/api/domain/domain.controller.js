@@ -93,6 +93,9 @@ exports.runContainer = async (req, res) => {
       // 세션 상태 업데이트
       await updateSessionState(session_id, 'RUNNING');  // req, res 없이 session_id와 상태만 전달
       session.container_id = containerId;
+      // last_active_at 필드 업데이트 (현재 시간으로)
+      // session.last_active_at = Date.now();
+      session.created_at = Date.now(); // 세션 생성 시간 업데이트
       await session.save();
   
       res.json({

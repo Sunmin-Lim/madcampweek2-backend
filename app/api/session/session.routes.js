@@ -88,6 +88,6 @@ router.get('/status/:containerId', sessionController.getContainerStatus);
 router.post('/stop', sessionController.stopContainer);
 
 // Remove a container
-router.delete('/remove/:containerId', sessionController.removeContainer);
+router.delete('/remove/:containerId/:sessionId', sessionController.removeContainer);
 
 module.exports = router;
