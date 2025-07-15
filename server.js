@@ -10,7 +10,7 @@ const sessionAdminRoutes = require('./app/api/session/session.admin.routes');
 const gitCloneRoutes = require('./app/api/gitclone/gitclone.routes');
 const archiveRoutes = require('./app/api/archive/archive.routes');
 const domainRoutes = require('./app/api/domain/domain.routes');
-const communityRoutes = require('./app/api/community/community.routes'); // ✅ 추가
+const searchRoutes = require('./app/api/search/search.routes'); // ✅ 추가
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,7 +32,7 @@ app.use('/api/session/admin', sessionAdminRoutes);
 app.use('/api/gitController', gitCloneRoutes);
 app.use('/api/archive', archiveRoutes);
 app.use('/api/domain', domainRoutes);
-app.use('/api/community', communityRoutes); // ✅ 꼭 prefix 추가
+app.use('/api/search', searchRoutes); // ✅ 꼭 prefix 추가
 
 app.get('/', (req, res) => {
   res.send('Hello from the Node.js Backend!');

@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const express = require('express');
 
 // ✅ Import community routes
-const communityRouter = require('../app/api/community/community.routes');
+const communityRouter = require('../app/api/search/community.routes');
 
 // ✅ Temporary Express App
 const app = express();

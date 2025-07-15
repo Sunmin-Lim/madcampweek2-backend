@@ -123,6 +123,46 @@ router.get('/searchGoogle', async (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Error during Google crawling and fetching results' });
   }
+
+  const pinnedService = require('../../services/pinnedLinkService');
+const jwt = require('jsonwebtoken');
+
+function getUserIdFromRequest(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return null;
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    return decoded.userId;
+  } catch {
+    return null;
+  }
+}
+
+router.get('/pinned-links', async (req, res) => {
+  const userId = getUserIdFromRequest(req);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const links = await pinnedService.getPinnedLinks(userId);
+  res.json(links);
+});
+
+router.post('/pinned-links', async (req, res) => {
+  const userId = getUserIdFromRequest(req);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const { name, url } = req.body;
+  if (!name || !url) return res.status(400).json({ error: 'Missing fields' });
+  const link = await pinnedService.addPinnedLink(userId, name, url);
+  res.status(201).json(link);
+});
+
+router.delete('/pinned-links', async (req, res) => {
+  const userId = getUserIdFromRequest(req);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const { url } = req.body;
+  await pinnedService.removePinnedLink(userId, url);
+  res.json({ message: 'Removed' });
+});
+
 });
 
 module.exports = router;
