@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
   },
   githubId: { type: String, unique: true, sparse: true }, // GitHub에서 온 사용자 구분
   authType: { type: String, enum: ['local', 'github'], default: 'local' },
+  clonedRepos: [{ type: String }] // 클론한 Git 리포지토리 URL을 배열로 저장
 });
 
 
