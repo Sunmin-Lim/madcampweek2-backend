@@ -89,7 +89,7 @@ router.post('/links', async (req, res) => {
   }
 });
 
-// ✅ NEW: Crawl Google and save
+// ✅ OLD: Crawl Google and just save (no return)
 router.post('/crawl/google', async (req, res) => {
   try {
     const { query } = req.body;
@@ -101,6 +101,27 @@ router.post('/crawl/google', async (req, res) => {
     res.json({ message: '✅ 구글 크롤링 및 저장 완료!' });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ NEW: Crawl Google, save, and RETURN results
+router.get('/searchGoogle', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ error: 'Missing query parameter q' });
+    }
+
+    // 1. Crawl and save in DB
+    await communityService.crawlGoogleAndSave(q);
+
+    // 2. Immediately return the saved results
+    const posts = await communityService.findPostsByTag(q);
+
+    res.json(posts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error during Google crawling and fetching results' });
   }
 });
 

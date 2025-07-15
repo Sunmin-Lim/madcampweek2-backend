@@ -7,28 +7,35 @@ const CX = process.env.GOOGLE_CX;
 
 async function googleSearchAndSave(query) {
   if (!API_KEY || !CX) {
-    throw new Error('API_KEY or CX is missing in .env!');
+    throw new Error('❌ GOOGLE_API_KEY or GOOGLE_CX is missing in .env!');
   }
 
   const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(query)}&key=${API_KEY}&cx=${CX}&safe=active`;
 
-  const { data } = await axios.get(url);
+  console.log('🌐 Sending request to:', url);
 
-  if (!data.items || data.items.length === 0) {
-    throw new Error('No results found from Google!');
-  }
+  try {
+    const { data } = await axios.get(url);
 
-  for (const item of data.items) {
-    await CommunityPost.create({
+    if (!data.items || data.items.length === 0) {
+      console.warn('⚠️ No results found from Google!');
+      return;
+    }
+
+    const bulkPosts = data.items.map(item => ({
       title: item.title,
       content: item.snippet,
       tags: ['구글', query],
       answers: [{ text: item.link }],
       views: 0
-    });
-  }
+    }));
 
-  console.log(`✅ Saved ${data.items.length} items to CommunityPost`);
+    await CommunityPost.insertMany(bulkPosts);
+    console.log(`✅ Saved ${bulkPosts.length} items to CommunityPost`);
+  } catch (error) {
+    console.error('❌ Error in googleSearchAndSave:', error.message);
+    throw error;
+  }
 }
 
 module.exports = { googleSearchAndSave };
