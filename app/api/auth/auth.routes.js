@@ -35,7 +35,7 @@ router.post('/register', async (req, res) => {
     if (existingUser) return res.status(400).json({ message: 'Email already in use' });
 
     const password_hash = await bcrypt.hash(password, 10);
-    const newUser = new User({ email, password_hash, username, logout: true }); // 로그아웃 상태 기본값 true로 설정
+    const newUser = new User({ email, password_hash, username: username.toLowerCase(), logout: true }); // 로그아웃 상태 기본값 true로 설정
     await newUser.save();
 
     console.log('✅ 새 사용자 생성 완료:', newUser);
@@ -198,7 +198,7 @@ router.post('/github/code', async (req, res) => {
       // GitHub ID가 없다면 새 사용자 생성
       user = await User.create({
         email: profile.email || `${profile.login}@github.com`, // email이 null일 수 있음
-        username: profile.login,
+        username: profile.login.toLowerCase(),
         logout: false, // 로그인 상태로 처리
         githubId: profile.id,
         authType: 'github',

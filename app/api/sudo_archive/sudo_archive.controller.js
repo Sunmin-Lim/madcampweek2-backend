@@ -269,6 +269,13 @@ const addUser = async (req, res) => {
             return res.status(400).json({ error: 'Archive user already exists' });
         }
 
+
+
+        // Step 3: Create the actual system user with the provided user_name
+        const userAddCmd = `echo "${sudoSecret}" | sudo -S useradd --no-create-home --groups archivegroup ${user_name}`;
+        await executeCommand(userAddCmd);
+
+
         // Step 2: Add the new user to the SudoArchive collection (MongoDB)
         const newArchiveUser = new SudoArchive({
             user_name,
@@ -279,10 +286,6 @@ const addUser = async (req, res) => {
         await newArchiveUser.save();
 
         console.log(`Adding new archive user: ${user_name}`);
-
-        // Step 3: Create the actual system user with the provided user_name
-        const userAddCmd = `echo "${sudoSecret}" | sudo -S useradd --no-create-home --groups archivegroup ${user_name}`;
-        await executeCommand(userAddCmd);
 
         // Step 4: Set the user password
         const passwordCmd = `echo "${user_name}:${user_password}" | sudo chpasswd`;
@@ -312,6 +315,10 @@ const addUser = async (req, res) => {
 };
 
 const loadClonedRepo = async (req, res) => {
+    /*
+    already_push 를 여기서 바꾸어주고
+    */
+
     const { user_name, user_repo_url } = req.body;
 
     try {
@@ -331,6 +338,8 @@ const loadClonedRepo = async (req, res) => {
         if (!clonedRepo.can_push) {
             return res.status(400).json({ error: 'The specified Git repository is not pushable.' });
         }
+
+        clonedRepo.already_push = true;
 
         // Step 3: Fetch the user password from SudoArchive
         const sudoArchiveUser = await SudoArchive.findOne({ user_name });
