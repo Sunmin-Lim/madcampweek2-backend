@@ -58,6 +58,8 @@ const sudoName = process.env.SUDO_NAME;
 const sudoSecret = process.env.SUDO_SECRET;
 const User = require('../../../models/User');
 const ClonedRepo = require('../../../models/ClonedRepo');
+const SudoArchive = require('../../models/sudo_archive'); // SudoArchive 모델 가져오기
+
 
 const { exec } = require('child_process');
 const path = require('path');
@@ -119,140 +121,251 @@ const changeCurrentUser = async (req, res) => {
 };
 
 
+// const addUser = async (req, res) => {
+//     const { user_name, user_password, user_repo_url } = req.body;
+//     try {
+//         await executeCommand('pwd');
+
+//         /*
+//         여기에 넣어야 할 기능
+//         user_name -> user_id를 찾고
+
+//         user_id, user_repo_url이 존재할 때 Cloned Repo를 찿고
+//         해당 Cloned Repo가 can push일 때 
+
+//         can_push가 true면 아래 작업이 수행됨, 아닌 경우에는 에러 메시지: 해당 git repository는 정상적으로 작동하지 않아 archive 할 수 없습니다.
+//         */
+
+
+//         // 1. user_name을 이용해 user_id를 찾기
+//         const user = await User.findOne({ username: user_name });
+//         if (!user) {
+//             return res.status(404).json({ error: 'User not found' });
+//         }
+//         const user_id = user._id;  // user_id 추출
+
+//         // 2. user_id와 user_repo_url이 존재할 때 ClonedRepo를 찾고, can_push가 true인지 확인
+//         const clonedRepo = await ClonedRepo.findOne({ user_id, repo_url: user_repo_url });
+//         if (!clonedRepo) {
+//             return res.status(404).json({ error: 'Cloned repository not found for this user and URL' });
+//         }
+
+//         if (!clonedRepo.can_push) {
+//             return res.status(400).json({ error: 'The specified Git repository is not working properly. Cannot archive.' });
+//         }
+
+//         // Step 1: Add new user
+//         console.log(`Adding new user: ${user_name}`);
+//         const userAddCmd = `echo "${sudoSecret}" | sudo -S useradd --no-create-home --groups archivegroup ${user_name}`;
+//         const { stdout: userAddStdout, stderr: userAddStderr } = await executeCommand(userAddCmd);
+//         console.log(userAddStdout);
+//         console.error(userAddStderr);  // Log any error here
+
+//         // Step 2: Set user password
+//         const passwordCmd = `echo "${user_name}:${user_password}" | sudo chpasswd`;
+//         const { stdout: passwordStdout, stderr: passwordStderr } = await executeCommand(passwordCmd);
+//         console.log(passwordStdout);
+//         console.error(passwordStderr);  // Log any error here
+
+//         // Step 3: Create user directory
+//         const rootPath = `/home/hanjeongjin/Workspace_ubuntu/madcampweek2-server/BackendArchive/`;
+//         const userHome = `/home/hanjeongjin/Workspace_ubuntu/madcampweek2-server/BackendArchive/${user_name}`;
+//         console.log(`Creating user directory at ${userHome}`);
+//         const mkdirCmd = `echo "${sudoSecret}" | sudo -S mkdir -p ${userHome}`;
+//         const { stdout: mkdirStdout, stderr: mkdirStderr } = await executeCommand(mkdirCmd);
+//         console.log(mkdirStdout);
+//         console.error(mkdirStderr);  // Log any error here
+
+//         // Step 4: Set permissions
+//         const chownCmd = `echo "${sudoSecret}" | sudo -S chown ${user_name}:archivegroup ${userHome}`;
+//         const { stdout: chownStdout, stderr: chownStderr } = await executeCommand(chownCmd);
+//         console.log(chownStdout);
+//         console.error(chownStderr);  // Log any error here
+
+//         const chmodCmd = `echo "${sudoSecret}" | sudo -S chmod 770 ${userHome}`;
+//         const { stdout: chmodStdout, stderr: chmodStderr } = await executeCommand(chmodCmd);
+//         console.log(chmodStdout);
+//         console.error(chmodStderr);  // Log any error here
+
+//         // Step 5: Set home directory for the user
+//         const usermodCmd = `echo "${sudoSecret}" | sudo -S usermod -d ${userHome} ${user_name}`;
+//         const { stdout: usermodStdout, stderr: usermodStderr } = await executeCommand(usermodCmd);
+//         // console.log(usermodStdout);
+//         // console.error(usermodStderr);  // Log any error here
+
+//         // Step 6: Configure Git for repositories
+
+//         /*
+//         이미 있으면 삭제하고 어차피 repoUrl임 <- 이것은 나중에 추가하기
+//         */
+//         if (!user_repo_url) {
+//             return res.status(400).json({ error: 'Repository URL is required.' });
+//         }
+
+//         const repoName = user_repo_url .split('/').pop().replace('.git', ''); // Extract repo name from URL
+
+//         const repoPath = path.join(userHome, repoName);
+//         console.log(`Configuring git for repository path: ${repoPath}`);
+//         try {
+
+//             // // 계정 바꾸기 echo "${user_password}" | su - ${user_name}
+//             // exec(`git config --global --add safe.directory ${repoPath}`); // 계정 바꾸기 echo "${sudoSecret}" | su - ${user_name}
+//             // exec(`git clone ${user_repo_url } ${repoPath}`); // 계정 바꾸기 echo "${sudoSecret}" | su - ${user_name}
+            
+//             // console.log(`Git clone executed for ${repoPath}`); 
+
+//             // await executeCommand(`git config --global --add safe.directory ${repoPath}`); // 계정 바꾸기 echo "${sudoSecret}" | su - ${user_name}
+//             // await executeCommand(`cd ${repoPath} && git rm --cached . -rf`); // 계정 바꾸기 echo "${sudoSecret}" | su - ${user_name}
+//             // console.log(`Git configuration and cache removal for ${repoPath} completed.`);
+
+//             try {
+//                 // Step 1: Switch user (using su)
+//                 const changeUserCommand = `echo "${user_password}" | su - ${user_name} -c "whoami"`;
+//                 const userChanged = await executeCommand(changeUserCommand); // switch user to user_name
+//                 console.log(`Switched to user: ${userChanged.trim()}`);
+        
+//                 // Step 2: Configure git for repository
+//                 await executeCommand(`echo "${user_password}" | su - ${user_name} -c "git config --global --add safe.directory ${repoPath}"`);
+//                 console.log(`Git config for ${repoPath} completed.`);
+
+//                 // git config --global --add safe.directory /home/hanjeongjin/Workspace_ubuntu/madcampweek2-server/BackendArchive
+//                 // await executeCommand(`echo "${user_password}" | su - ${user_name} -c "git config --global --add safe.directory ${rootPath}"`);
+        
+//                 // Step 3: Clone the repository (Git clone as user)
+//                 await executeCommand(`echo "${user_password}" | su - ${user_name} -c "git clone ${user_repo_url} ${repoPath}"`);
+//                 console.log(`Git clone executed for ${repoPath}`);
+        
+//                 // Step 4: Remove cached files (git rm --cached)
+//                 await executeCommand(`echo "${user_password}" | su - ${user_name} -c "cd ${repoPath} && rm -rf .git"`);
+//                 // await executeCommand(`echo "${user_password}" | su - ${user_name} -c "cd ${repoPath} && git rm --cached . -rf"`);
+//                 console.log(`Git configuration and cache removal for ${repoPath} completed.`);
+                
+//             } catch (error) {
+//                 console.error(`Error configuring git for repository: ${repoPath}. Error: ${error.message}`);
+//             }
+//         } catch (error) {
+//             console.error(`Error configuring git for repository: ${repoPath}. Error: ${error.message}`);
+//         }
+//         // Return success response
+//         res.status(200).json({ message: 'User added and repositories configured.' });
+
+//     } catch (error) {
+//         console.error(`Error during user creation process: ${error.message}`);
+//         console.error(error.stack);  // Log the stack trace for debugging
+//         res.status(500).json({ error: error.message });
+//     }
+// };
+
+
 const addUser = async (req, res) => {
-    const { user_name, user_password, user_repo_url } = req.body;
+    const { user_name, user_password } = req.body;
+
     try {
-        await executeCommand('pwd');
+        // Step 1: Check if the archive user already exists
+        const existingArchiveUser = await SudoArchive.findOne({ user_name });
 
-        /*
-        여기에 넣어야 할 기능
-        user_name -> user_id를 찾고
+        if (existingArchiveUser) {
+            // If the user already exists in the SudoArchive collection
+            return res.status(400).json({ error: 'Archive user already exists' });
+        }
 
-        user_id, user_repo_url이 존재할 때 Cloned Repo를 찿고
-        해당 Cloned Repo가 can push일 때 
+        // Step 2: Add the new user to the SudoArchive collection (MongoDB)
+        const newArchiveUser = new SudoArchive({
+            user_name,
+            user_password,
+        });
 
-        can_push가 true면 아래 작업이 수행됨, 아닌 경우에는 에러 메시지: 해당 git repository는 정상적으로 작동하지 않아 archive 할 수 없습니다.
-        */
+        // Save the new user information to the MongoDB collection
+        await newArchiveUser.save();
 
+        console.log(`Adding new archive user: ${user_name}`);
 
-        // 1. user_name을 이용해 user_id를 찾기
+        // Step 3: Create the actual system user with the provided user_name
+        const userAddCmd = `echo "${sudoSecret}" | sudo -S useradd --no-create-home --groups archivegroup ${user_name}`;
+        await executeCommand(userAddCmd);
+
+        // Step 4: Set the user password
+        const passwordCmd = `echo "${user_name}:${user_password}" | sudo chpasswd`;
+        await executeCommand(passwordCmd);
+
+        // Step 5: Create user directory for archive user
+        const userHome = `/home/hanjeongjin/Workspace_ubuntu/madcampweek2-server/BackendArchive/${user_name}`;
+        const mkdirCmd = `echo "${sudoSecret}" | sudo -S mkdir -p ${userHome}`;
+        await executeCommand(mkdirCmd);
+
+        // Step 6: Set permissions for the user directory
+        const chownCmd = `echo "${sudoSecret}" | sudo -S chown ${user_name}:archivegroup ${userHome}`;
+        await executeCommand(chownCmd);
+
+        const chmodCmd = `echo "${sudoSecret}" | sudo -S chmod 770 ${userHome}`;
+        await executeCommand(chmodCmd);
+
+        // Step 7: Set home directory for the user
+        const usermodCmd = `echo "${sudoSecret}" | sudo -S usermod -d ${userHome} ${user_name}`;
+        await executeCommand(usermodCmd);
+
+        res.status(200).json({ message: 'Archive user added and system user created successfully' });
+    } catch (error) {
+        console.error('Error during user creation:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const loadClonedRepo = async (req, res) => {
+    const { user_name, user_repo_url } = req.body;
+
+    try {
+        // Step 1: Fetch user_id based on user_name
         const user = await User.findOne({ username: user_name });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        const user_id = user._id;  // user_id 추출
+        const user_id = user._id;
 
-        // 2. user_id와 user_repo_url이 존재할 때 ClonedRepo를 찾고, can_push가 true인지 확인
+        // Step 2: Find the cloned repo for the user and check the `can_push` flag
         const clonedRepo = await ClonedRepo.findOne({ user_id, repo_url: user_repo_url });
         if (!clonedRepo) {
-            return res.status(404).json({ error: 'Cloned repository not found for this user and URL' });
+            return res.status(404).json({ error: 'Cloned repository not found' });
         }
 
         if (!clonedRepo.can_push) {
-            return res.status(400).json({ error: 'The specified Git repository is not working properly. Cannot archive.' });
+            return res.status(400).json({ error: 'The specified Git repository is not pushable.' });
         }
 
-        // Step 1: Add new user
-        console.log(`Adding new user: ${user_name}`);
-        const userAddCmd = `echo "${sudoSecret}" | sudo -S useradd --no-create-home --groups archivegroup ${user_name}`;
-        const { stdout: userAddStdout, stderr: userAddStderr } = await executeCommand(userAddCmd);
-        console.log(userAddStdout);
-        console.error(userAddStderr);  // Log any error here
-
-        // Step 2: Set user password
-        const passwordCmd = `echo "${user_name}:${user_password}" | sudo chpasswd`;
-        const { stdout: passwordStdout, stderr: passwordStderr } = await executeCommand(passwordCmd);
-        console.log(passwordStdout);
-        console.error(passwordStderr);  // Log any error here
-
-        // Step 3: Create user directory
-        const rootPath = `/home/hanjeongjin/Workspace_ubuntu/madcampweek2-server/BackendArchive/`;
-        const userHome = `/home/hanjeongjin/Workspace_ubuntu/madcampweek2-server/BackendArchive/${user_name}`;
-        console.log(`Creating user directory at ${userHome}`);
-        const mkdirCmd = `echo "${sudoSecret}" | sudo -S mkdir -p ${userHome}`;
-        const { stdout: mkdirStdout, stderr: mkdirStderr } = await executeCommand(mkdirCmd);
-        console.log(mkdirStdout);
-        console.error(mkdirStderr);  // Log any error here
-
-        // Step 4: Set permissions
-        const chownCmd = `echo "${sudoSecret}" | sudo -S chown ${user_name}:archivegroup ${userHome}`;
-        const { stdout: chownStdout, stderr: chownStderr } = await executeCommand(chownCmd);
-        console.log(chownStdout);
-        console.error(chownStderr);  // Log any error here
-
-        const chmodCmd = `echo "${sudoSecret}" | sudo -S chmod 770 ${userHome}`;
-        const { stdout: chmodStdout, stderr: chmodStderr } = await executeCommand(chmodCmd);
-        console.log(chmodStdout);
-        console.error(chmodStderr);  // Log any error here
-
-        // Step 5: Set home directory for the user
-        const usermodCmd = `echo "${sudoSecret}" | sudo -S usermod -d ${userHome} ${user_name}`;
-        const { stdout: usermodStdout, stderr: usermodStderr } = await executeCommand(usermodCmd);
-        // console.log(usermodStdout);
-        // console.error(usermodStderr);  // Log any error here
-
-        // Step 6: Configure Git for repositories
-
-        /*
-        이미 있으면 삭제하고 어차피 repoUrl임 <- 이것은 나중에 추가하기
-        */
-        if (!user_repo_url) {
-            return res.status(400).json({ error: 'Repository URL is required.' });
+        // Step 3: Fetch the user password from SudoArchive
+        const sudoArchiveUser = await SudoArchive.findOne({ user_name });
+        if (!sudoArchiveUser) {
+            return res.status(404).json({ error: 'SudoArchive user not found' });
         }
+        const user_password = sudoArchiveUser.user_password;  // Extract password from SudoArchive
 
-        const repoName = user_repo_url .split('/').pop().replace('.git', ''); // Extract repo name from URL
+        // Step 4: Use the user password to switch user and execute commands
+        const repoPath = `/home/hanjeongjin/Workspace_ubuntu/madcampweek2-server/BackendArchive/${user_name}/${user_repo_url.split('/').pop().replace('.git', '')}`;
 
-        const repoPath = path.join(userHome, repoName);
-        console.log(`Configuring git for repository path: ${repoPath}`);
-        try {
+        // Switch to the user using su and configure the git repository
+        const changeUserCommand = `echo "${user_password}" | su - ${user_name} -c "whoami"`;
+        const userChanged = await executeCommand(changeUserCommand);
+        console.log(`Switched to user: ${userChanged.trim()}`);
 
-            // // 계정 바꾸기 echo "${user_password}" | su - ${user_name}
-            // exec(`git config --global --add safe.directory ${repoPath}`); // 계정 바꾸기 echo "${sudoSecret}" | su - ${user_name}
-            // exec(`git clone ${user_repo_url } ${repoPath}`); // 계정 바꾸기 echo "${sudoSecret}" | su - ${user_name}
-            
-            // console.log(`Git clone executed for ${repoPath}`); 
+        // Configure git for the repository
+        await executeCommand(`echo "${user_password}" | su - ${user_name} -c "git config --global --add safe.directory ${repoPath}"`);
+        console.log(`Git config for ${repoPath} completed.`);
 
-            // await executeCommand(`git config --global --add safe.directory ${repoPath}`); // 계정 바꾸기 echo "${sudoSecret}" | su - ${user_name}
-            // await executeCommand(`cd ${repoPath} && git rm --cached . -rf`); // 계정 바꾸기 echo "${sudoSecret}" | su - ${user_name}
-            // console.log(`Git configuration and cache removal for ${repoPath} completed.`);
+        // Clone the repository
+        await executeCommand(`echo "${user_password}" | su - ${user_name} -c "git clone ${user_repo_url} ${repoPath}"`);
+        console.log(`Git clone executed for ${repoPath}`);
 
-            try {
-                // Step 1: Switch user (using su)
-                const changeUserCommand = `echo "${user_password}" | su - ${user_name} -c "whoami"`;
-                const userChanged = await executeCommand(changeUserCommand); // switch user to user_name
-                console.log(`Switched to user: ${userChanged.trim()}`);
-        
-                // Step 2: Configure git for repository
-                await executeCommand(`echo "${user_password}" | su - ${user_name} -c "git config --global --add safe.directory ${repoPath}"`);
-                console.log(`Git config for ${repoPath} completed.`);
+        // Remove cached files
+        await executeCommand(`echo "${user_password}" | su - ${user_name} -c "cd ${repoPath} && rm -rf .git"`);
+        console.log(`Git configuration and cache removal for ${repoPath} completed.`);
 
-                // git config --global --add safe.directory /home/hanjeongjin/Workspace_ubuntu/madcampweek2-server/BackendArchive
-                // await executeCommand(`echo "${user_password}" | su - ${user_name} -c "git config --global --add safe.directory ${rootPath}"`);
-        
-                // Step 3: Clone the repository (Git clone as user)
-                await executeCommand(`echo "${user_password}" | su - ${user_name} -c "git clone ${user_repo_url} ${repoPath}"`);
-                console.log(`Git clone executed for ${repoPath}`);
-        
-                // Step 4: Remove cached files (git rm --cached)
-                await executeCommand(`echo "${user_password}" | su - ${user_name} -c "cd ${repoPath} && rm -rf .git"`);
-                // await executeCommand(`echo "${user_password}" | su - ${user_name} -c "cd ${repoPath} && git rm --cached . -rf"`);
-                console.log(`Git configuration and cache removal for ${repoPath} completed.`);
-                
-            } catch (error) {
-                console.error(`Error configuring git for repository: ${repoPath}. Error: ${error.message}`);
-            }
-        } catch (error) {
-            console.error(`Error configuring git for repository: ${repoPath}. Error: ${error.message}`);
-        }
-        // Return success response
-        res.status(200).json({ message: 'User added and repositories configured.' });
-
+        res.status(200).json({ message: 'Cloned repo loaded and configured successfully', repo: clonedRepo });
     } catch (error) {
-        console.error(`Error during user creation process: ${error.message}`);
-        console.error(error.stack);  // Log the stack trace for debugging
+        console.error('Error loading cloned repo:', error);
         res.status(500).json({ error: error.message });
     }
 };
+
 
 // Delete user
 const delUser = async (req, res) => {
@@ -325,6 +438,7 @@ module.exports = {
     changeCurrentUser,
     getCurrentUser,
     addUser,
+    loadClonedRepo,
     delUser,
     pushToArchive,
 };

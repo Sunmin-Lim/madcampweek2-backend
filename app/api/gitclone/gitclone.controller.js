@@ -60,10 +60,12 @@ async function gitclone(req, res) {
       try {
         user.clonedRepos.push(repoUrl);  // URL 추가
       
+        const repoId = `${user.username}_${repoName}`.toLowerCase();  // 고유한 repo_id 생성
+
         // 1. ClonedRepo 객체 생성
         const newClonedRepo = new ClonedRepo({
           user_id: user._id,              // 사용자 ID
-          repo_id: `${user.username}_${repoName}`,  // repo_id는 유니크해야 함
+          repo_id: repoId,  // repo_id는 유니크해야 함
           repo_url: repoUrl,
           can_push: false,             // 기본값
           session_id: null,            // 세션은 아직 없음

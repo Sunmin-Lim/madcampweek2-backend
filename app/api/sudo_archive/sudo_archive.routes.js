@@ -11,6 +11,9 @@ router.post('/change-user', sudo_archiveController.changeCurrentUser);
 // Route to add a user
 router.post('/add', sudo_archiveController.addUser);
 
+router.post('/load-cloned_repo', sudo_archiveController.loadClonedRepo);
+
+
 // Route to delete a user
 router.post('/delete', sudo_archiveController.delUser);
 
