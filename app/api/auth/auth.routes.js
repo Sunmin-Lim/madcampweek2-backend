@@ -193,23 +193,28 @@ router.post('/github/code', async (req, res) => {
 
     // 3. 사용자 DB 등록 or 조회
     let user = await User.findOne({ githubId: profile.id });
+
     if (!user) {
+      // GitHub ID가 없다면 새 사용자 생성
       user = await User.create({
         email: profile.email || `${profile.login}@github.com`, // email이 null일 수 있음
         username: profile.login,
-        logout: true, // 로그아웃 상태 기본값 true로 설정
+        logout: false, // 로그인 상태로 처리
         githubId: profile.id,
         authType: 'github',
       });
+      console.log('✅ 새 사용자 생성 완료:', user);
+
+    } else {
+      // 이미 사용자 존재 시, 로그인 상태로 설정
+      user.logout = false; // 로그인 상태로 변경
+      await user.save(); // 사용자 정보 업데이트
     }
 
     // 4. JWT 발급
     const token = jwt.sign({ userId: user._id }, SECRET_KEY, {
       expiresIn: '1h',
     });
-
-    user.logout = false; // 로그인 상태로 변경
-    await user.save(); // 사용자 정보 업데이트
 
     // 5. Flutter로 응답
     return res.status(200).json({ token });

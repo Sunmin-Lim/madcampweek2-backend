@@ -1,7 +1,9 @@
 // app/api/domain/domain.controller.js
 const dockerManager = require('../../services/docker_manager'); // Ensure correct path
 const Session = require('../../models/session.model'); // Ensure correct path
+
 const { updateSessionState } = require('../session/session.controller'); // Import the session controller
+const ClonedRepo = require('../../../models/ClonedRepo');
 
 
 // docker run and update the session state
@@ -57,7 +59,7 @@ const { updateSessionState } = require('../session/session.controller'); // Impo
 // };
 
 exports.runContainer = async (req, res) => {
-    const { session_id, cpu, memory, port } = req.body;
+    const { session_id, cpu, memory, port, repo_url } = req.body;
   
     // 요청 본문에 필수 값들이 모두 있는지 확인
     if (!session_id || !cpu || !memory || !port) {
@@ -87,6 +89,8 @@ exports.runContainer = async (req, res) => {
         memory,  
         mappedPort
       );
+
+
   
       console.log(`Container started with ID: ${containerId}`);
   
@@ -97,7 +101,21 @@ exports.runContainer = async (req, res) => {
       // session.last_active_at = Date.now();
       session.created_at = Date.now(); // 세션 생성 시간 업데이트
       await session.save();
+
+      // cloned Repo 업데이트
+      const user_id = session.user_id;  // 세션에서 user_id 가져오기
+      const updatedRepo = await ClonedRepo.findOneAndUpdate(
+        { user_id, repo_url },
+        { can_push: true },
+        { new: true } // 업데이트된 문서를 반환
+      );
   
+      if (!updatedRepo) {
+        console.log('No matching cloned repository found for the update');
+      } else {
+        console.log('Cloned repo updated:', updatedRepo);
+      }
+
       res.json({
         message: 'Container is now running!',
         containerId,

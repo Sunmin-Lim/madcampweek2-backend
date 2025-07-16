@@ -56,9 +56,12 @@ Host 143.248.183.61
 
 const sudoName = process.env.SUDO_NAME;
 const sudoSecret = process.env.SUDO_SECRET;
+const User = require('../../../models/User');
+const ClonedRepo = require('../../../models/ClonedRepo');
 
 const { exec } = require('child_process');
 const path = require('path');
+
 
 // Helper function to execute shell commands
 const executeCommand = (command) => {
@@ -120,6 +123,34 @@ const addUser = async (req, res) => {
     const { user_name, user_password, user_repo_url } = req.body;
     try {
         await executeCommand('pwd');
+
+        /*
+        여기에 넣어야 할 기능
+        user_name -> user_id를 찾고
+
+        user_id, user_repo_url이 존재할 때 Cloned Repo를 찿고
+        해당 Cloned Repo가 can push일 때 
+
+        can_push가 true면 아래 작업이 수행됨, 아닌 경우에는 에러 메시지: 해당 git repository는 정상적으로 작동하지 않아 archive 할 수 없습니다.
+        */
+
+
+        // 1. user_name을 이용해 user_id를 찾기
+        const user = await User.findOne({ username: user_name });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        const user_id = user._id;  // user_id 추출
+
+        // 2. user_id와 user_repo_url이 존재할 때 ClonedRepo를 찾고, can_push가 true인지 확인
+        const clonedRepo = await ClonedRepo.findOne({ user_id, repo_url: user_repo_url });
+        if (!clonedRepo) {
+            return res.status(404).json({ error: 'Cloned repository not found for this user and URL' });
+        }
+
+        if (!clonedRepo.can_push) {
+            return res.status(400).json({ error: 'The specified Git repository is not working properly. Cannot archive.' });
+        }
 
         // Step 1: Add new user
         console.log(`Adding new user: ${user_name}`);
